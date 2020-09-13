@@ -5,8 +5,8 @@ const basename = path.basename(module.filename);
 
 let db = new Object();
 let sequelize = new Object();
-
-sequelize = new Sequelize('sqlite::memory', { logging: false });
+//										\/ dId YoU KnOw GiThUb maKeS yOuR pAsSwOrD ShOw Up As *****?
+sequelize = new Sequelize('postgres://terminal:hunter2@127.0.0.1:5432/development', { logging: false });
 
 sequelize.authenticate().then(() => {
 }).catch((err) => { 

@@ -1,4 +1,4 @@
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 const chalk = require('chalk');
 
 module.exports = (sequelize, { TEXT, BIGINT }) => {
@@ -48,9 +48,9 @@ module.exports = (sequelize, { TEXT, BIGINT }) => {
         });
     }
     
-    Record.getPage = function({limit, offset, order}) {
+    Record.getPage = function({where_statment, limit, offset, order}) {
         return this.findAll({
-                where:{},
+                ...where_statment,
                 offset,
                 limit,
                 order,

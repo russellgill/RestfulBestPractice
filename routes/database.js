@@ -1,4 +1,4 @@
-const { Sequelize: { Op } } = require('sequelize');
+const { Sequelize: { Op }, where } = require('sequelize');
 const router = require('express').Router();
 const { Record } = require('../models');
 const { sort_map } = require('../objects/maps');
@@ -50,15 +50,68 @@ router.get('/records/:id?', async (req, res, next) => {
 
 router.get('/records', async (req, res) => {
     let response = null;
+    let where_statment = {};
     console.log('Basic List Endpoint hit');
 
     try {
         let query = req.query;
         let offset = query.page;
         let limit = query.size; 
+        let filter = query.filter || null;
+        let search = query.search || null;
+        let filter_by = query.filter_by || null;
         let order = sort_map[query.order] || sort_map[DEFAULT];
 
+        if (search){ 
+            let query_listified = [];
+            if (search.includes(" ")){
+                query_listified = search.split(" ");
+            } else {
+                query_listified.push(search);
+            }
+
+            where_statment = {
+                where: {
+                    [Op.or]:{
+                        content: {
+                            [Op.iLike]: {
+                                [Op.any]: [query_listified],
+                            }
+                        },
+                        field_one: {
+                            [Op.iLike]: {
+                                [Op.any]: [query_listified],
+                            }
+                        },
+                        field_two: {
+                            [Op.iLike]: {
+                                [Op.any]: [query_listified],
+                            }
+                        }
+                    }
+                },
+            };
+        }
+        if (filter && filter_by) {
+            switch(filter_by){
+                case 'field_one':
+                    where_statment.where.field_one = { 
+                        [Op.eq]: filter,
+                    };
+                    break;
+                case 'field_two':
+                    where_statment.where.field_two = {
+                        [Op.eq]: filter,
+                    };
+                    break;
+            }
+        } else if (filter_by && !filter) {
+            throw new Error('Filteration fild specified, but no query provided.');
+        } else if (filter && !filter_by){
+            throw new Error('Filter query specified, but no filteration field provided.');
+        }
         let records = await Record.getPage({
+            where_statment,
             offset,
             limit,
             order,
